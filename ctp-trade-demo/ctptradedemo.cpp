@@ -4,11 +4,11 @@
 #include "stdafx.h"
 #include "../tradeapi_x64/ThostFtdcTraderApi.h"
 
-#include "QCTPTradingApi.h"
+#include "QCTPTradingSpi.h"
 
 // 7x24:       180.168.146.187:10030
 // standard:   180.168.146.187:10001
-char* Trade_Front = "tcp://180.168.146.187:10030";
+char* Trade_Front = "tcp://180.168.146.187:10000";
 
 int main()
 {
@@ -16,7 +16,7 @@ int main()
 	assert(pUserTradeApi != nullptr && "Create trader api failed");
 	if (pUserTradeApi)
 	{
-		QCTPTradingApi* pUserTradeSpi = new QCTPTradingApi(pUserTradeApi);
+		QCTPTradingSpi* pUserTradeSpi = new QCTPTradingSpi(pUserTradeApi);
 		assert(pUserTradeSpi);
 		if (pUserTradeSpi)
 		{

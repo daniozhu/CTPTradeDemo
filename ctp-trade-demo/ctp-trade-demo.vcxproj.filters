@@ -39,7 +39,7 @@
     <ClInclude Include="..\tradeapi_x64\ThostFtdcUserApiStruct.h">
       <Filter>trade-api</Filter>
     </ClInclude>
-    <ClInclude Include="QCTPTradingApi.h">
+    <ClInclude Include="QCTPTradingSpi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,7 +50,7 @@
     <ClCompile Include="ctptradedemo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="QCTPTradingApi.cpp">
+    <ClCompile Include="QCTPTradingSpi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,23 +1,23 @@
 #include "stdafx.h"
-#include "QCTPTradingApi.h"
+#include "QCTPTradingSpi.h"
 
 const char* BrokerID  = "9999";
 const char* UserID    = "082644";
 const char* Password  = "19820517zjh";
 
-QCTPTradingApi::QCTPTradingApi(CThostFtdcTraderApi * pTradeApi)
+QCTPTradingSpi::QCTPTradingSpi(CThostFtdcTraderApi * pTradeApi)
 	: m_pUserTradeApi(pTradeApi)
 {
 	assert(m_pUserTradeApi);
 }
 
 
-QCTPTradingApi::~QCTPTradingApi()
+QCTPTradingSpi::~QCTPTradingSpi()
 {
 	m_pUserTradeApi = nullptr;
 }
 
-void QCTPTradingApi::OnFrontConnected()
+void QCTPTradingSpi::OnFrontConnected()
 {
 	std::cout << "OnFrontConnected" << std::endl;
 	if (m_pUserTradeApi)
@@ -36,14 +36,19 @@ void QCTPTradingApi::OnFrontConnected()
 	}
 }
 
-void QCTPTradingApi::OnFrontDisconnected(int nReason)
+void QCTPTradingSpi::OnFrontDisconnected(int nReason)
 {
 	std::cout << "OnFrontDisconnected due to reason: " << nReason << std::endl;
 }
 
-void QCTPTradingApi::OnRspUserLogin(CThostFtdcRspUserLoginField * pRspUserLogin, CThostFtdcRspInfoField * pRspInfo, int nRequestID, bool bIsLast)
+void QCTPTradingSpi::OnRspUserLogin(CThostFtdcRspUserLoginField * pRspUserLogin, CThostFtdcRspInfoField * pRspInfo, int nRequestID, bool bIsLast)
 {
 	const bool bOK = (pRspInfo && pRspInfo->ErrorID == 0);
 	std::cout << "OnRspUserLogin " << (bOK ? "Succeeded" : "Failed") << std::endl;
+}
+
+void QCTPTradingSpi::OnRspError(CThostFtdcRspInfoField * pRspInfo, int nRequestID, bool bIsLast)
+{
+	std::cout << "OnRepError - ErrorId = " << pRspInfo->ErrorID << std::endl;
 }
 
