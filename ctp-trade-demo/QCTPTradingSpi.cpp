@@ -3,7 +3,7 @@
 
 const char* BrokerID  = "9999";
 const char* UserID    = "082644";
-const char* Password  = "19820517zjh";
+const char* Password  = "123456789";
 
 QCTPTradingSpi::QCTPTradingSpi(CThostFtdcTraderApi * pTradeApi)
 	: m_pUserTradeApi(pTradeApi)
