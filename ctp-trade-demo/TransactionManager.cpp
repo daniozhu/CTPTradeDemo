@@ -81,7 +81,16 @@ void TransactionManager::ClosePosition(const std::string & instrumentId,
 			++m_transactionNumbers;
 
 			// Calculate profit
-			const double profit = (price - m_Positions[i].Price) * m_Positions[i].Number;
+			double profit = 0.0;
+			if (closeType == Position::eBuy)
+			{
+				profit = (price - m_Positions[i].Price) * m_Positions[i].Number;
+			}
+			else
+			{
+				profit = (m_Positions[i].Price - price) * m_Positions[i].Number;
+			}
+
 			m_currentProfit += profit;
 
 			// print to console
@@ -122,7 +131,7 @@ void TransactionManager::DumpCurrentStatus()
 	transactionData << "Holding positions: " << m_Positions.size() << std::endl;
 	if (!m_Positions.empty())
 	{
-		transactionData << "Instrument Id, Number, Open date, Buy/Sell, Open price" << std::endl;
+		transactionData <<"Instrument Id, Number, Open date, Buy/Sell, Open price" << std::endl;
 		for (const auto& pos : m_Positions)
 		{
 			transactionData << pos.InstrumentId.c_str() << "," 
