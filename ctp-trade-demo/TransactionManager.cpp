@@ -14,13 +14,13 @@ TransactionManager::TransactionManager()
 
 	std::ofstream transactionData;
 	transactionData.open(m_transactionDataFilePath);
-	transactionData << "InstrumentId" << ","
-		<< "Date" << ","
-		<< "Open/Close" << ","
-		<< "Buy/Sell" << ","
-		<< "Price" << ","
-		<< "Number" << ","
-		<< "ProfitOrLoss" << std::endl;
+	transactionData << "合约编号" << ","
+		<< "日期" << ","
+		<< "开/平" << ","
+		<< "多/空" << ","
+		<< "价格" << ","
+		<< "手" << ","
+		<< "平仓盈亏" << std::endl;
 	transactionData.close();
 }
 
@@ -46,19 +46,19 @@ void TransactionManager::OpenPosition(const std::string& instrumentId,
 
 	++m_transactionNumbers;
 
-	// print to console
-	std::cout << "Open position: " << instrumentId.c_str() << ", " 
+	// 打印到屏幕
+	std::cout << "开仓 : " << instrumentId.c_str() << ", " 
 		<< date.c_str() << ", " 
 		<< price << ", "
-		<< (type == Position::eBuy ? "Buy" : "Sell") << std::endl;
+		<< (type == Position::eBuy ? "多" : "空") << std::endl;
 
-	// save the transaction to file
+	// 保存交易记录到文件
 	std::ofstream transactionData;
 	transactionData.open(m_transactionDataFilePath, std::ios::app);
 	transactionData << instrumentId.c_str() << ","
 		<< date.c_str() << ","
-		<< "Open" << ","
-		<< (type == Position::eBuy ? "Buy" : "Sell") << ","
+		<< "开" << ","
+		<< (type == Position::eBuy ? "多" : "空") << ","
 		<< price << ","
 		<< number << std::endl;
 	transactionData.close();
@@ -80,12 +80,15 @@ void TransactionManager::ClosePosition(const std::string & instrumentId,
 		{
 			++m_transactionNumbers;
 
-			// Calculate profit
+			// 计算盈亏
 			double profit = 0.0;
+
+			// 平多仓，　盈亏　＝　当前价格减去开仓价格，乘以数量
 			if (closeType == Position::eBuy)
 			{
 				profit = (price - m_Positions[i].Price) * m_Positions[i].Number;
 			}
+			//　平空仓，盈亏　＝　开仓价格减去当前价格，乘以数量
 			else
 			{
 				profit = (m_Positions[i].Price - price) * m_Positions[i].Number;
@@ -93,17 +96,17 @@ void TransactionManager::ClosePosition(const std::string & instrumentId,
 
 			m_currentProfit += profit;
 
-			// print to console
-			std::cout << "Close position: " << instrumentId.c_str() << ", "
+			// 打印到屏幕
+			std::cout << "平仓: " << instrumentId.c_str() << ", "
 				<< date.c_str() << ", "
 				<< price << ", "
-				<< (closeType == Position::eBuy ? "Sell" : "Buy") << std::endl;
+				<< (closeType == Position::eBuy ? "多" : "空") << std::endl;
 
-			// save to file
+			// 保存到文件
 			transactionData << instrumentId.c_str() << ","
 				<< date.c_str() << ","
-				<< "Close" << ","
-				<< (closeType == Position::eBuy ? "Sell" : "Buy") << ","
+				<< "平" << ","
+				<< (closeType == Position::eBuy ? "多" : "空") << ","
 				<< price << ","
 				<< m_Positions[i].Number << ","
 				<< profit << std::endl;
@@ -126,18 +129,18 @@ void TransactionManager::DumpCurrentStatus()
 	transactionData.open(m_transactionDataFilePath, std::ios::app);
 
 	transactionData << "====================================" << std::endl;
-	transactionData << "Transaction number: " << m_transactionNumbers << std::endl;
-	transactionData << "Current Profit:" << m_currentProfit << std::endl;
-	transactionData << "Holding positions: " << m_Positions.size() << std::endl;
+	transactionData << "交易次数: " << m_transactionNumbers << std::endl;
+	transactionData << "当前盈亏:　" << m_currentProfit << std::endl;
+	transactionData << "当前持仓: " << m_Positions.size() << std::endl;
 	if (!m_Positions.empty())
 	{
-		transactionData <<"Instrument Id, Number, Open date, Buy/Sell, Open price" << std::endl;
+		transactionData <<"合约编号, 手, 开仓日期, 多/空, 开仓价格" << std::endl;
 		for (const auto& pos : m_Positions)
 		{
 			transactionData << pos.InstrumentId.c_str() << "," 
 				<< pos.Number << "," 
 				<< pos.OpenDate.c_str() << "," 
-				<< (pos.PosType == Position::eBuy ? "Buy" : "Sell") << ","
+				<< (pos.PosType == Position::eBuy ? "多" : "空") << ","
 				<< pos.Price << std::endl;
 		}
 	}
