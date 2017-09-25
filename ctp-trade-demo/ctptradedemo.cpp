@@ -90,7 +90,7 @@ int main()
 
 		std::vector<MAData> history_MA; history_MA.reserve(value.size());
 
-		TransactionManager transactionManager{value};
+		TransactionManager transactionManager;
 
 		// 从第11天开始，计算昨天的MA5/MA10
 		for (int i = 10; i < (int)value.size(); ++i)
@@ -132,7 +132,7 @@ int main()
 			if (bMA5_Up && bMA10_Up && !bMA5GreaterThanMA10_Before_Yesterday && bMA5GreaterThanMA10_Yesterday)
 			{
 				// 以今天开盘价平掉空仓，如果有的话
-				transactionManager.ClosePosition(instrumentId, value[i]["date"].asString(), Position::eSell, ::atof(value[i]["open"].asCString()), i);
+				transactionManager.ClosePosition(instrumentId, value[i]["date"].asString(), Position::eSell, ::atof(value[i]["open"].asCString()));
 
 				// 然后再以今天开盘价开多仓
 				transactionManager.OpenPosition(instrumentId, value[i]["date"].asString(), Position::eBuy, ::atof(value[i]["open"].asCString()), 1);
@@ -141,7 +141,7 @@ int main()
 			else if (!bMA5_Up && !bMA10_Up && bMA5GreaterThanMA10_Before_Yesterday && !bMA5GreaterThanMA10_Yesterday)
 			{
 				//　以今天开盘价平掉多仓，如果有的话
-				transactionManager.ClosePosition(instrumentId, value[i]["date"].asString(), Position::eBuy, ::atof(value[i]["open"].asCString()), i);
+				transactionManager.ClosePosition(instrumentId, value[i]["date"].asString(), Position::eBuy, ::atof(value[i]["open"].asCString()));
 
 				// 然后再以今天开盘价开空仓
 				transactionManager.OpenPosition(instrumentId, value[i]["date"].asString(), Position::eSell, ::atof(value[i]["open"].asCString()), 1);
@@ -150,18 +150,20 @@ int main()
 			else if (bMA5GreaterThanMA10_Before_Yesterday && !bMA5GreaterThanMA10_Yesterday)
 			{
 				// 以今天开盘价平掉多仓，　如果有的话
-				transactionManager.ClosePosition(instrumentId, value[i]["date"].asString(), Position::eBuy, ::atof(value[i]["open"].asCString()), i);
+				transactionManager.ClosePosition(instrumentId, value[i]["date"].asString(), Position::eBuy, ::atof(value[i]["open"].asCString()));
 			}
 			// 过去两天MA5呈上升趋势，　MA10向下趋势，且MA5从下往上突破MA10
 			else if (bMA5_Up && !bMA10_Up && !bMA5GreaterThanMA10_Before_Yesterday && bMA5GreaterThanMA10_Yesterday)
 			{
 				// 以今天开盘价平掉空仓，　如果有的话
-				transactionManager.ClosePosition(instrumentId, value[i]["date"].asString(), Position::eSell, ::atof(value[i]["open"].asCString()), i);
+				transactionManager.ClosePosition(instrumentId, value[i]["date"].asString(), Position::eSell, ::atof(value[i]["open"].asCString()));
 			}
 			else
 			{
 				// 其他情况，　继续持仓，不采取任何动作
 			}
+
+			transactionManager.IncreaseHoldingDay();
 		}
 
 		// 保存 MA5/10 数据到文件

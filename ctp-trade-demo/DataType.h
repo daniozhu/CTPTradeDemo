@@ -13,7 +13,12 @@ struct Position
 
 	std::string    InstrumentId;
 	std::string    OpenDate;
+	std::string    CloseDate;
 	Type           PosType;
 	int            Number;
-	double         Price;
+	double         OpenPrice;
+	double         ClosePrice;
+	double         ProfitLoss;
+	int            HoldingDays;
+	bool           IsClosed;
 };
