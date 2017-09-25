@@ -208,9 +208,9 @@ void TransactionManager::DumpCurrentStatus()
 	auto iter_max_profit = std::max_element(continousProfitDaysVec.begin(), continousProfitDaysVec.end());
 	auto iter_max_loss = std::max_element(continousLossDaysVec.begin(), continousLossDaysVec.end());
 	transactionData << "连续盈利最大天数： " << *iter_max_profit << std::endl;
-	transactionData << "连续盈利平均天数： " << std::accumulate(continousProfitDaysVec.begin(), continousProfitDaysVec.end(), 0) / continousProfitDaysVec.size() << std::endl;
+	transactionData << "连续盈利平均天数： " << std::accumulate(continousProfitDaysVec.begin(), continousProfitDaysVec.end(), 0.0) / continousProfitDaysVec.size() << std::endl;
 	transactionData << "连续亏损最大天数： " << *iter_max_loss << std::endl;
-	transactionData << "连续亏损平均天数： " << std::accumulate(continousLossDaysVec.begin(), continousLossDaysVec.end(), 0) / continousLossDaysVec.size() << std::endl;
+	transactionData << "连续亏损平均天数： " << std::accumulate(continousLossDaysVec.begin(), continousLossDaysVec.end(), 0.0) / continousLossDaysVec.size() << std::endl;
 	
 	transactionData << "====================================" << std::endl;
 
