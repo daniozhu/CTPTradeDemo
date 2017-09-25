@@ -16,8 +16,9 @@ public:
 
 private :
 	std::vector<Position>   m_Positions;
+	std::vector<double>     m_ProfitLoss;
 	std::string             m_transactionDataFilePath;
-	double                  m_currentProfit;
+
 	int                     m_transactionNumbers;
 };
 

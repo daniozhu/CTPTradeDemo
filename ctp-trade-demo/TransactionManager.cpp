@@ -3,14 +3,16 @@
 #include "DataType.h"
 
 #include <fstream>
+#include <numeric>
+#include <algorithm>
 
 
 TransactionManager::TransactionManager()
 	:m_transactionDataFilePath("c:\\temp\\transaction.csv"),
-	m_transactionNumbers(0),
-	m_currentProfit(0.0)
+	m_transactionNumbers(0)
 {
 	m_Positions.clear();
+	m_ProfitLoss.clear();
 
 	std::ofstream transactionData;
 	transactionData.open(m_transactionDataFilePath);
@@ -72,8 +74,6 @@ void TransactionManager::ClosePosition(const std::string & instrumentId,
 	std::ofstream transactionData;
 	transactionData.open(m_transactionDataFilePath, std::ios::app);
 
-	double profit = 0.0;
-	int number = 0;
 	size_t i = 0;
 	while (i < m_Positions.size()) {
 		if (m_Positions[i].PosType == closeType) 
@@ -94,7 +94,7 @@ void TransactionManager::ClosePosition(const std::string & instrumentId,
 				profit = (m_Positions[i].Price - price) * m_Positions[i].Number;
 			}
 
-			m_currentProfit += profit;
+			m_ProfitLoss.push_back(profit);
 
 			// 打印到屏幕
 			std::cout << "平仓: " << instrumentId.c_str() << ", "
@@ -130,7 +130,7 @@ void TransactionManager::DumpCurrentStatus()
 
 	transactionData << "====================================" << std::endl;
 	transactionData << "交易次数: " << m_transactionNumbers << std::endl;
-	transactionData << "当前盈亏:　" << m_currentProfit << std::endl;
+	transactionData << "当前盈亏:　" << std::accumulate(m_ProfitLoss.begin(), m_ProfitLoss.end(), 0.0) << std::endl;
 	transactionData << "当前持仓: " << m_Positions.size() << std::endl;
 	if (!m_Positions.empty())
 	{
@@ -144,11 +144,77 @@ void TransactionManager::DumpCurrentStatus()
 				<< pos.Price << std::endl;
 		}
 	}
+
+	int profitTimes = 0;
+	double profit = 0.0;
+	double loss = 0.0;
+	std::vector<int> continousProfitDaysVec;
+	std::vector<int> continousLossDaysVec;
+	int coutinousProfitDays = 0;
+	int coutinousLossDays = 0;
+	bool bLastDayProfit = false;
+	for (size_t i= 0; i < m_ProfitLoss.size(); ++i)
+	{
+		const double value = m_ProfitLoss[i];
+
+		if (value > 0.0)
+		{
+			++profitTimes;
+			profit += value;
+
+			if (0 == i)
+			{
+				bLastDayProfit = true;
+				++coutinousProfitDays;
+				continue;
+			}
+
+			if (!bLastDayProfit)
+			{
+				continousLossDaysVec.push_back(coutinousLossDays);
+				coutinousLossDays = 0;
+			}
+
+			++coutinousProfitDays;
+			bLastDayProfit = true;
+		}
+		else
+		{
+			loss += value;
+
+			if (0 == i)
+			{
+				bLastDayProfit = false;
+				++coutinousLossDays;
+				continue;
+			}
+
+			if (bLastDayProfit)
+			{
+				continousProfitDaysVec.push_back(coutinousProfitDays);
+				coutinousProfitDays = 0;
+			}
+
+			++coutinousLossDays;
+			bLastDayProfit = false;
+		}
+	}
+
+	transactionData << "胜率： " << ((double)profitTimes / m_ProfitLoss.size()) * 100 << "%" << std::endl;
+	transactionData << "盈亏比： " << (profit / abs(loss))<< std::endl;
+	transactionData << "平均盈利： " << (profit / profitTimes)<< std::endl;
+	transactionData << "平均亏损： " << (abs(loss) / (m_ProfitLoss.size() - profitTimes)) << std::endl;
+
+	auto iter_max_profit = std::max_element(continousProfitDaysVec.begin(), continousProfitDaysVec.end());
+	auto iter_max_loss = std::max_element(continousLossDaysVec.begin(), continousLossDaysVec.end());
+	transactionData << "连续盈利最大天数： " << *iter_max_profit << std::endl;
+	transactionData << "连续盈利平均天数： " << std::accumulate(continousProfitDaysVec.begin(), continousProfitDaysVec.end(), 0) / continousProfitDaysVec.size() << std::endl;
+	transactionData << "连续亏损最大天数： " << *iter_max_loss << std::endl;
+	transactionData << "连续亏损平均天数： " << std::accumulate(continousLossDaysVec.begin(), continousLossDaysVec.end(), 0) / continousLossDaysVec.size() << std::endl;
 	
 	transactionData << "====================================" << std::endl;
 
 	transactionData.close();
 }
-
 
 
