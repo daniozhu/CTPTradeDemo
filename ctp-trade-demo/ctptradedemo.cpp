@@ -92,6 +92,11 @@ int main()
 
 		TransactionManager transactionManager;
 
+		std::ofstream MADataFile;
+		std::string maFilePath = "c:\\temp\\" + instrumentId + "_MAData.csv";
+		MADataFile.open(maFilePath);
+		MADataFile << "Date, " << "MA5, " << "MA10" << std::endl;
+
 		// 从第11天开始，计算昨天的MA5/MA10
 		for (int i = 10; i < (int)value.size(); ++i)
 		{
@@ -109,75 +114,92 @@ int main()
 			}
 			ma_5 = (ma_5 / 5);
 
+			const size_t length = history_MA.size();
+
 			MAData maData;
 			maData.Date = value[i - 1]["date"].asString();
 			maData.MA5 = ma_5;
 			maData.MA10 = ma_10;
-			history_MA.push_back(std::move(maData));
+			
+			MADataFile << maData.Date << ","
+				<< maData.MA5 << ","
+				<< maData.MA10 << std::endl;
 
-			const size_t length = history_MA.size();
 			// 小于两天的MA历史数据无法确定走势，继续计算下一天的MA5/MA10
-			if (length < 2)
+			if (0 == length)
+			{
+				history_MA.push_back(std::move(maData));
 				continue;
+			}
 
-			// 计算MA5/10过去两天的趋势
-			const bool bMA5_Up = (history_MA[length - 1].MA5 - history_MA[length - 2].MA5) > 0;
-			const bool bMA10_Up = (history_MA[length - 1].MA10 - history_MA[length - 2].MA10) > 0;
+			// 计算昨天和前天的MA5/10趋势
+			const bool bMA5_Up = (maData.MA5 - history_MA[length - 1].MA5) > 0;
+			const bool bMA10_Up = (maData.MA10 - history_MA[length - 1].MA10) > 0;
 
-			// 计算过去两天MA5/10的位置关系
-			const bool bMA5GreaterThanMA10_Yesterday = (history_MA[length - 1].MA5 - history_MA[length - 1].MA10) > 0;
-			const bool bMA5GreaterThanMA10_Before_Yesterday = (history_MA[length - 2].MA5 - history_MA[length - 2].MA10) > 0;
+			// 计算昨天和前天MA5/10的位置关系
+			const bool bMA5GreaterThanMA10_Yesterday = (maData.MA5 - maData.MA10) > 0;
+			const bool bMA5GreaterThanMA10_Before_Yesterday = (history_MA[length - 1].MA5 - history_MA[length - 1].MA10) > 0;
 
-			// 过去两天MA5和MA10都是向上趋势， 且MA5从下向上突破MA10
+			// 能否计算大前天的M5/M10走势
+			const bool bCanCheckTwoDaysBack = (length > 2);
+
+			std::string today     =  value[i]["date"].asString();
+			double todyOpenPrice  = ::atof(value[i]["open"].asCString());
+
+			// 前天到昨天MA5和MA10都是向上趋势， 且MA5从下向上突破MA10
 			if (bMA5_Up && bMA10_Up && !bMA5GreaterThanMA10_Before_Yesterday && bMA5GreaterThanMA10_Yesterday)
 			{
 				// 以今天开盘价平掉空仓，如果有的话
-				transactionManager.ClosePosition(instrumentId, value[i]["date"].asString(), Position::eSell, ::atof(value[i]["open"].asCString()));
+				transactionManager.ClosePosition(instrumentId, today, Position::eSell, todyOpenPrice);
 
-				// 然后再以今天开盘价开多仓
-				transactionManager.OpenPosition(instrumentId, value[i]["date"].asString(), Position::eBuy, ::atof(value[i]["open"].asCString()), 1);
+				// M10前天和大前天也是上升趋势, 上升趋势已明显，以今天开盘价开多仓
+				if (bCanCheckTwoDaysBack )
+				{
+					if(history_MA[length - 1].IsMA10UptrendFromYesterday && history_MA[length - 2].IsMA10UptrendFromYesterday)
+						transactionManager.OpenPosition(instrumentId, today, Position::eBuy, todyOpenPrice, 1);
+				}
+				else 
+				{
+					//如果历史数据少于计算大前天的M10走势，以今天开盘价开多仓
+					transactionManager.OpenPosition(instrumentId, today, Position::eBuy, todyOpenPrice, 1);
+				}
 			}
 			// 过去两天MA5和MA10趋势向下， 且MA5从上往下跌破MA10
 			else if (!bMA5_Up && !bMA10_Up && bMA5GreaterThanMA10_Before_Yesterday && !bMA5GreaterThanMA10_Yesterday)
 			{
 				//　以今天开盘价平掉多仓，如果有的话
-				transactionManager.ClosePosition(instrumentId, value[i]["date"].asString(), Position::eBuy, ::atof(value[i]["open"].asCString()));
+				transactionManager.ClosePosition(instrumentId, today, Position::eBuy, todyOpenPrice);
 
-				// 然后再以今天开盘价开空仓
-				transactionManager.OpenPosition(instrumentId, value[i]["date"].asString(), Position::eSell, ::atof(value[i]["open"].asCString()), 1);
+				// 以今天开盘价开空仓
+				transactionManager.OpenPosition(instrumentId, today, Position::eSell, todyOpenPrice, 1);
+				
 			}
 			// 过去两天MA5从上往下跌破MA10
 			else if (bMA5GreaterThanMA10_Before_Yesterday && !bMA5GreaterThanMA10_Yesterday)
 			{
 				// 以今天开盘价平掉多仓，　如果有的话
-				transactionManager.ClosePosition(instrumentId, value[i]["date"].asString(), Position::eBuy, ::atof(value[i]["open"].asCString()));
+				transactionManager.ClosePosition(instrumentId, today, Position::eBuy, todyOpenPrice);
 			}
 			// 过去两天MA5呈上升趋势，　MA10向下趋势，且MA5从下往上突破MA10
 			else if (bMA5_Up && !bMA10_Up && !bMA5GreaterThanMA10_Before_Yesterday && bMA5GreaterThanMA10_Yesterday)
 			{
 				// 以今天开盘价平掉空仓，　如果有的话
-				transactionManager.ClosePosition(instrumentId, value[i]["date"].asString(), Position::eSell, ::atof(value[i]["open"].asCString()));
+				transactionManager.ClosePosition(instrumentId, today, Position::eSell, todyOpenPrice);
 			}
 			else
 			{
 				// 其他情况，　继续持仓，不采取任何动作
 			}
 
+			maData.IsCrossedWithYesterday = (!bMA5GreaterThanMA10_Before_Yesterday && bMA5GreaterThanMA10_Yesterday)||
+				(bMA5GreaterThanMA10_Before_Yesterday && !bMA5GreaterThanMA10_Yesterday);
+			maData.IsMA5UpTrendFromYesterday = bMA5_Up;
+			maData.IsMA10UptrendFromYesterday = bMA10_Up;
+
+			history_MA.push_back(std::move(maData));
 			transactionManager.IncreaseHoldingDay();
 		}
 
-		// 保存 MA5/10 数据到文件
-		std::ofstream MADataFile;
-		std::string maFilePath = "c:\\temp\\" + instrumentId + "_MAData.csv";
-
-		MADataFile.open(maFilePath);
-		MADataFile << "Date, " << "MA5, " << "MA10" << std::endl;
-		for (const auto& ma : history_MA)
-		{
-			MADataFile << ma.Date << ","
-				<< ma.MA5 << ","
-				<< ma.MA10 << std::endl;
-		}
 		MADataFile.close();
 
 		transactionManager.DumpCurrentStatus();
