@@ -2,12 +2,15 @@
 #include "TransactionManager.h"
 #include "DataType.h"
 
-#include "../json_cpp/include/json.h"
-
 #include <fstream>
 #include <numeric>
 #include <algorithm>
+#include <map>
 
+std::map<std::string, int> InstrumentHandToNumberMap
+{
+	{"rb", 10}
+};
 
 TransactionManager::TransactionManager()
 	:m_transactionDataFilePath("c:\\temp\\transaction.csv"),
@@ -56,7 +59,7 @@ void TransactionManager::OpenPosition(const std::string& instrumentId,
 	Position pos;
 	pos.PosType = type;
 	pos.InstrumentId = instrumentId;
-	pos.Number = number;
+	pos.Hands = number;
 	pos.OpenPrice = price;
 	pos.OpenDate = date;
 	pos.IsClosed = false;
@@ -105,12 +108,12 @@ void TransactionManager::ClosePosition(const std::string & instrumentId,
 			// 平多仓，　盈亏　＝　当前价格减去开仓价格，乘以数量
 			if (closeType == Position::eBuy)
 			{
-				profit = (price - pos.OpenPrice) * pos.Number;
+				profit = (price - pos.OpenPrice) * pos.Hands*InstrumentHandToNumberMap[instrumentId];
 			}
 			//　平空仓，盈亏　＝　开仓价格减去当前价格，乘以数量
 			else
 			{
-				profit = (pos.OpenPrice - price) * pos.Number;
+				profit = (pos.OpenPrice - price) * pos.Hands*InstrumentHandToNumberMap[instrumentId];
 			}
 
 			pos.ProfitLoss = profit;
@@ -146,7 +149,7 @@ void TransactionManager::ClosePosition(const std::string & instrumentId,
 				<< "平" << ","
 				<< (closeType == Position::eBuy ? "多" : "空") << ","
 				<< price << ","
-				<< pos.Number << ","
+				<< pos.Hands << ","
 				<< pos.ProfitLoss << std::endl;
 
 			if (profit > 0.0) //此次平仓盈利

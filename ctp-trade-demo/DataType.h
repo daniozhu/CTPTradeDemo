@@ -18,7 +18,7 @@ struct Position
 	std::string    OpenDate;
 	std::string    CloseDate;
 	Type           PosType;
-	int            Number;
+	int            Hands;
 	double         OpenPrice;
 	double         ClosePrice;
 	double         ProfitLoss;
