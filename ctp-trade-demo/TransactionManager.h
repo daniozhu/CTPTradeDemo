@@ -19,6 +19,8 @@ private :
 	std::vector<Position>   m_Positions;
 	std::vector<int>        m_continousProfitTimesVec; //连续盈利此数集合
 	std::vector<int>        m_continousLossTimesVec;   //连续亏损次数集合
+	std::vector<double>     m_profitHistory;
+	std::vector<double>     m_drawBackHistory;
 	std::string             m_transactionDataFilePath;
 	int                     m_transactionNumbers;      //交易次数 （开仓 + 平仓）
 	int                     m_closedPositions;         //平仓次数

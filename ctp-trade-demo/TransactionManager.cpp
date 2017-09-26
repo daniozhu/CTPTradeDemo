@@ -28,6 +28,7 @@ TransactionManager::TransactionManager()
 	m_Positions.clear();
 	m_continousLossTimesVec.clear();
 	m_continousProfitTimesVec.clear();
+	m_profitHistory.clear();
 
 	std::ofstream transactionData;
 	transactionData.open(m_transactionDataFilePath);
@@ -121,6 +122,17 @@ void TransactionManager::ClosePosition(const std::string & instrumentId,
 			m_totalHoldingDays += pos.HoldingDays;
 			++m_transactionNumbers;
 			++m_closedPositions;
+
+			//计算今天以前的最大回撤
+			auto iter_max_history = std::max_element(m_profitHistory.begin(), m_profitHistory.end());
+			// 存在回撤
+			if (iter_max_history != m_profitHistory.end() && (m_currentProfitLoss < *iter_max_history))
+			{
+				m_drawBackHistory.push_back(*iter_max_history - m_currentProfitLoss);
+			}
+
+			//保存今天盈亏
+			m_profitHistory.push_back(m_currentProfitLoss);
 
 			// 打印到屏幕
 			std::cout << "平仓: " << instrumentId.c_str() << ", "
@@ -225,6 +237,8 @@ void TransactionManager::DumpCurrentStatus()
 	transactionData << "连续亏损平均次数： " << std::accumulate(m_continousLossTimesVec.begin(), m_continousLossTimesVec.end(), 0.0) / m_continousLossTimesVec.size() << std::endl;
 	transactionData << "最大盈利： " << m_maxProfit << std::endl;
 	transactionData << "最大亏损: " << m_maxLoss << std::endl;
+
+	transactionData << "历史最大回撤： " << *std::max_element(m_drawBackHistory.begin(), m_drawBackHistory.end()) << std::endl;
 	transactionData << "====================================" << std::endl;
 
 	transactionData.close();
